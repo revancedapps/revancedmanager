@@ -1,11 +1,13 @@
 import 'dart:async';
-
 import 'package:appcheck/appcheck.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_donation_buttons/flutter_donation_buttons.dart';
-
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import 'app_item_list.dart';
 import 'network_requester.dart';
 import 'ns_app_info.dart';
+import 'app_item.dart';
 
 void main() {
   runApp(const RevancedManagerApp());
@@ -36,153 +38,51 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late NsAppInfo appYoutubeRevanced;
-  late NsAppInfo appMicroG;
-  late NsAppInfo appYoutubeRevancedExt;
-  late NsAppInfo appYoutubeMusicRevanced;
-  late NsAppInfo appRevancedManager;
-  late NsAppInfo appTiktokRevanced;
-  late NsAppInfo appRedditRevanced;
-  late NsAppInfo appTwitchRevanced;
+  late List<NsAppInfo> appWidgets;
 
-  late List<NsAppInfo> apps;
+  List<AppItem> appItems = [];
 
   _MyHomePageState() {
-    appYoutubeRevanced = NsAppInfo(
-        appTile: 'Youtube ReVanced',
-        appSubTile:
-            'YouTube Revanced is a modified version of the official YouTube that blocks ads and allows users to play videos in the background.',
-        appIcon: 'images/youtube.png',
-        appPackageName: 'app.revanced.android.youtube',
-        onNeedToReload: triggerReload);
-    appMicroG = NsAppInfo(
-        appTile: 'MicroG',
-        appSubTile:
-            'MicroG is a free, open-source, and privacy-focused alternative to Google Play Services.',
-        appIcon: 'images/microg.png',
-        appPackageName: 'com.mgoogle.android.gms',
-        onNeedToReload: triggerReload);
+    appItems = AppItemList.GetAppList();
+    appWidgets = [];
 
-    appYoutubeRevancedExt = NsAppInfo(
-      appTile: 'Youtube ReVanced Extended',
-      appSubTile:
-          'A free, ad-free, and modded version of YouTube with background playback, sponsorblock, and more features.',
-      appIcon: 'images/youtube_ext.png',
-      appPackageName: 'app.rvx.android.youtube',
-      onNeedToReload: triggerReload,
-    );
-
-    appYoutubeMusicRevanced = NsAppInfo(
-        appTile: 'Youtube Music ReVanced',
-        appSubTile:
-            'A free, ad-free, and modded version of YouTube Music with background playback and lyrics.',
-        appIcon: 'images/youtube_music.png',
-        appPackageName: 'app.revanced.android.apps.youtube.music',
-        onNeedToReload: triggerReload);
-
-    appRevancedManager = NsAppInfo(
-        appTile: 'ReVanced Manager',
-        appSubTile:
-            'ReVanced Manager is a free app from revanced.net that lets you install and manage YouTube ReVanced, MicroG, and other Revanced apps.',
-        appIcon: 'images/revanced_manager.png',
-        appPackageName: 'com.revanced.net.revancedmanager',
-        onNeedToReload: triggerReload);
-
-    appTiktokRevanced = NsAppInfo(
-        appTile: 'TikTok ReVanced',
-        appSubTile:
-            'TikTok ReVanced is a free, ad-free, and modded version of TikTok with additional features such as no watermark, no live stream ads, and more.',
-        appIcon: 'images/tiktok.png',
-        appPackageName: 'com.ss.android.ugc.trill',
-        onNeedToReload: triggerReload);
-
-    appRedditRevanced = NsAppInfo(
-        appTile: 'Reddit ReVanced',
-        appSubTile:
-            'Reddit is a social news website where users submit content and vote on it. The most popular content is displayed to the most people.',
-        appIcon: 'images/com.reddit.frontpage.png',
-        appPackageName: 'com.reddit.frontpage',
-        onNeedToReload: triggerReload);
-
-    appTwitchRevanced = NsAppInfo(
-        appTile: 'Twitch ReVanced',
-        appSubTile:
-            'Twitch is a live streaming platform where users can watch and interact with gamers, musicians, and other creators.',
-        appIcon: 'images/tv.twitch.android.app.png',
-        appPackageName: 'tv.twitch.android.app',
-        onNeedToReload: triggerReload);
-
-    apps = [
-      appYoutubeRevanced,
-      appMicroG,
-      appYoutubeRevancedExt,
-      appYoutubeMusicRevanced,
-      appRevancedManager,
-      appTiktokRevanced,
-      appRedditRevanced,
-      appTwitchRevanced
-    ];
+    for (var app in appItems) {
+      appWidgets.add(NsAppInfo(appItem: app, onNeedToReload: triggerReload));
+    }
   }
 
   Future<void> refresh() async {
-    // for (var app in apps) {
-    //   app.setLoading(true);
-    // }
-
     var settingReader = RevancedClient();
     var setting = await settingReader.getSetting();
 
-    for (var app in apps) {
-      String appVersion = "";
-      String latestVersion = "";
-      String? apkUrl = "";
+    for (var app in appItems) {
       try {
-        var appInfo = await AppCheck.checkAvailability(app.appPackageName);
+        var appInfo = await AppCheck.checkAvailability(app.packageName);
         if (appInfo != null) {
-          appVersion = appInfo.versionName ?? "";
+          app.currentVersion = appInfo.versionName ?? "";
         }
       } catch (e) {
         print('Something really unknown: $e');
+        app.currentVersion = "";
       }
 
       if (setting?.packages != null) {
         var matchedSettingPackage = setting.packages
-            .where((el) => el.packageName == app.appPackageName)
+            .where((el) =>
+                (app.packageTitle != null &&
+                    el.packageTitle == app.packageTitle) ||
+                (app.packageTitle == null && el.packageName == app.packageName))
             .firstOrNull;
         if (matchedSettingPackage != null) {
-          latestVersion = matchedSettingPackage.version ?? "";
-          apkUrl = matchedSettingPackage.downloadUrl;
+          app.latestVersion = matchedSettingPackage.version ?? "";
+          app.downloadUrl = matchedSettingPackage.downloadUrl;
         }
       }
 
-      app.setVersion(appVersion ?? "", latestVersion ?? "", apkUrl);
+      // app.setVersion(appVersion ?? "", latestVersion ?? "", apkUrl);
+      app.Widget?.updateInfo();
     }
   }
-/*
-  void _incrementCounter() {
-    setState(() async {
-      var installedApps = await AppCheck.getInstalledApps();
-      int totalApps = 0;
-      for (var app in installedApps!) {
-        totalApps++;
-        if (app.packageName?.contains("rvx") == true) {
-          showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                    title: Text('Info'),
-                    content: Text(
-                        'Total Apps: ${totalApps} \nappName: ${app.appName}\npackageName: ${app.packageName}\nversionName: ${app.versionName}'),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, 'OK'),
-                        child: const Text('OK'),
-                      ),
-                    ],
-                  ));
-        }
-      }
-    });
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -198,28 +98,39 @@ class _MyHomePageState extends State<MyHomePage> {
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.blue),
           ),
-          appYoutubeRevancedExt,
-          appMicroG,
-          appYoutubeRevanced,
+          Column(children: appWidgets),
           SizedBox(height: 20),
-          Text(
-            "OTHER APPS",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.blue),
-          ),
-          appYoutubeMusicRevanced,
-          appRevancedManager,
-          appTiktokRevanced,
-          appRedditRevanced,
-          appTwitchRevanced,
-          SizedBox(height: 30),
+
+          // Text(
+          //   "OTHER APPS",
+          //   textAlign: TextAlign.center,
+          //   style: TextStyle(color: Colors.blue),
+          // ),
+          // appYoutubeMusicRevanced,
+          // appRevancedManager,
+          // appTiktokRevanced,
+          // appRedditRevanced,
+          // appTwitchRevanced,
+          // SizedBox(height: 30),
           Center(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                KofiButton(kofiName: 'revancednet', kofiColor: KofiColor.Blue
-                          )
+                KofiButton(kofiName: 'revancednet', kofiColor: KofiColor.Blue),
+              ],
+            ),
+          ),Center(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                    onPressed: _launchURL,
+                    child: Text('Visit revanced.net'),
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(Colors.lightBlue),
+                    ))
               ],
             ),
           ),
@@ -242,10 +153,19 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     refresh().then((value) => {});
     timer = Timer.periodic(
-        const Duration(seconds: 2), (Timer t) => refresh().then((value) => {}));
+        const Duration(seconds: 5), (Timer t) => refresh().then((value) => {}));
   }
 
   Future<void> triggerReload() async {
     await refresh();
+  }
+
+  _launchURL() async {
+    const url = 'https://revanced.net'; // Replace with the URL you want to open
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }

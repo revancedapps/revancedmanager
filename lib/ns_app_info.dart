@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:Revanced_Manager_by_revanced.net/app_item.dart';
 import 'package:app_installer/app_installer.dart';
+import 'package:crypto/crypto.dart';
 import 'package:external_app_launcher/external_app_launcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart' as syspaths;
 
 class NsAppInfo extends StatefulWidget {
-  final String appTile;
-  final String appSubTile;
-  final String appIcon;
-  final String appPackageName;
-  late String? appApkUrl = "";
+  final AppItem appItem;
 
   final Function() onNeedToReload;
 
@@ -21,11 +20,11 @@ class NsAppInfo extends StatefulWidget {
 
   NsAppInfo(
       {super.key,
-      required this.appTile,
-      required this.appSubTile,
-      required this.appIcon,
-      required this.appPackageName,
-      required this.onNeedToReload}) {}
+      required this.appItem,
+      required this.onNeedToReload}) {
+    this.appItem.Widget = this;
+
+  }
 
   @override
   State<StatefulWidget> createState() {
@@ -40,7 +39,7 @@ class NsAppInfo extends StatefulWidget {
   }
 
   void setVersion(String currentVersion, String latestVersion, String? apkUrl) {
-    this.appApkUrl = apkUrl;
+    // this.appApkUrl = apkUrl;
     if (state?.mounted == true) {
       state?.setState(() {
         state!._currentVersion = currentVersion;
@@ -62,6 +61,20 @@ class NsAppInfo extends StatefulWidget {
         // } else {
         //   state!.tempStatusCount = 0;
         // }
+      });
+    }
+  }
+  void updateInfo() {
+    // this.appApkUrl = apkUrl;
+    if (state?.mounted == true) {
+      state?.setState(() {
+        state!._currentVersion = appItem.currentVersion??"";
+        state!._latestVersion = appItem.latestVersion??"";
+        state!.isLoading = false;
+
+        if (state!.isInstalling == true &&
+            appItem.currentVersion ==  appItem.latestVersion &&
+            appItem.currentVersion!.isNotEmpty) state!.isInstalling = false;
       });
     }
   }
@@ -87,9 +100,9 @@ class NsAppInfoState extends State<NsAppInfo> {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           ListTile(
-            leading: Image.asset(widget.appIcon, width: 64, height: 64),
-            title: Text(widget.appTile),
-            subtitle: Text(widget.appSubTile,
+            leading: Image.asset("images/apps/"+widget.appItem.packageName+".png", width: 64, height: 64),
+            title: Text(widget.appItem.title),
+            subtitle: Text(widget.appItem.description,
                 style: TextStyle(
                   fontSize: 11.0,
                   color: Colors.grey,
@@ -146,7 +159,7 @@ class NsAppInfoState extends State<NsAppInfo> {
                     )),
               Spacer(),
               if (_currentVersion?.isNotEmpty != true &&
-                  widget.appApkUrl?.isNotEmpty == true &&
+                  widget.appItem.downloadUrl?.isNotEmpty == true &&
                   !isDownloading &&
                   // !isUnInstalling &&
                   !isInstalling)
@@ -164,7 +177,7 @@ class NsAppInfoState extends State<NsAppInfo> {
                   onPressed: DownloadAndInstallApk,
                 ),
               if (_currentVersion?.isNotEmpty == true &&
-                  !widget.appPackageName.contains('revancedmanager') &&
+                  !widget.appItem.packageName.contains('revancedmanager') &&
                   !isDownloading &&
                   // !isUnInstalling &&
                   !isInstalling)
@@ -178,7 +191,7 @@ class NsAppInfoState extends State<NsAppInfo> {
                       onPressed: () async {
                         // isUnInstalling = true;
                         const platform = MethodChannel('com.flutter.uninstall');
-                        String package = widget.appPackageName;
+                        String package = widget.appItem.packageName;
 
                         var uninstallResult =
                             await platform.invokeMethod("Uninstall", {
@@ -189,7 +202,7 @@ class NsAppInfoState extends State<NsAppInfo> {
                       }),
                 ),
               if (_currentVersion?.isNotEmpty == true &&
-                  !widget.appPackageName.contains('gms') &&
+                  !widget.appItem.packageName.contains('gms') &&
                   !isDownloading &&
                   // !isUnInstalling &&
                   !isInstalling)
@@ -202,7 +215,7 @@ class NsAppInfoState extends State<NsAppInfo> {
                       ),
                       onPressed: () async {
                         await LaunchApp.openApp(
-                            androidPackageName: widget.appPackageName);
+                            androidPackageName: widget.appItem.packageName);
                       }),
                 ),
               if (isDownloading)
@@ -256,10 +269,21 @@ class NsAppInfoState extends State<NsAppInfo> {
     );
   }
 
+  String calculateMD5(String input) {
+    var bytes = utf8.encode(input); // Encode the string as bytes
+    var digest = md5.convert(bytes); // Calculate the MD5 hash
+    return digest.toString(); // Convert the hash to a string
+  }
+
+
   void DownloadAndInstallApk() async {
     var tempDir = await syspaths.getTemporaryDirectory();
+    String urlHash = calculateMD5( widget.appItem.downloadUrl!);
+
+
     var apkPath =
-        "${tempDir.path}/${widget.appPackageName}.${_latestVersion}.apk";
+        "${tempDir.path}/${widget.appItem.packageName}.${_latestVersion}.${urlHash}.apk";
+
     print(apkPath);
 
     bool fileExists = await doesFileExist(apkPath);
@@ -284,7 +308,7 @@ class NsAppInfoState extends State<NsAppInfo> {
     final dio = Dio();
     if (needToDownload) {
       var response = await dio.download(
-        widget.appApkUrl!,
+        widget.appItem.downloadUrl!,
         apkPath,
         onReceiveProgress: (count, total) {
           setState(() {

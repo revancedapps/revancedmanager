@@ -4,8 +4,8 @@ import 'dart:io';
 class RevancedClient {
   Future<SettingObject> getSetting() async {
     final client = HttpClient();
-    var request = await client.getUrl(Uri.parse(
-        'https://revanced.net/app-info.json'));
+    var request =
+        await client.getUrl(Uri.parse('https://revanced.net/app-info.json'));
     var response = await request.close();
     final string = await response.transform(utf8.decoder).join();
     var decoded = jsonDecode(string);
