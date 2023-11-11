@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:appcheck/appcheck.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_donation_buttons/flutter_donation_buttons.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'app_item_list.dart';
 import 'network_requester.dart';
@@ -38,17 +37,54 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late List<NsAppInfo> appWidgets;
+  late List<NsAppInfo> appWidgets = [];
 
   List<AppItem> appItems = [];
 
-  _MyHomePageState() {
-    appItems = AppItemList.GetAppList();
-    appWidgets = [];
+  _MyHomePageState() {}
+
+  Future<void> initAppList() async {
+    if (appItems.isEmpty) {
+      appItems = AppItemList.GetAppList();
+    }
+
+    List<AppItem> installedApps  =[];
+    List<AppItem> notInstalledApps  =[];
 
     for (var app in appItems) {
-      appWidgets.add(NsAppInfo(appItem: app, onNeedToReload: triggerReload));
+      var installed = false;
+      //check if the app installed
+      try {
+        var appInfo = await AppCheck.checkAvailability(app.packageName);
+        if (appInfo != null) {
+          app.currentVersion = appInfo.versionName ?? "";
+        }
+      } catch (e) {
+        // print('Something really unknown: $e');
+        app.currentVersion = "";
+      }
+      if (app.currentVersion?.isNotEmpty == true) installed = true;
+
+
+      if (installed)
+        installedApps.add(app);
+      else
+        notInstalledApps.add(app);
     }
+
+
+
+    setState(() {
+      appWidgets.clear();
+      for(var app in installedApps) {
+        var appInfo = NsAppInfo(appItem: app, onNeedToReload: triggerReload);
+        appWidgets.add(appInfo);
+      }
+      for(var app in notInstalledApps) {
+        var appInfo = NsAppInfo(appItem: app, onNeedToReload: triggerReload);
+        appWidgets.add(appInfo);
+      }
+    });
   }
 
   Future<void> refresh() async {
@@ -62,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
           app.currentVersion = appInfo.versionName ?? "";
         }
       } catch (e) {
-        print('Something really unknown: $e');
+        // print('Something really unknown: $e');
         app.currentVersion = "";
       }
 
@@ -93,25 +129,16 @@ class _MyHomePageState extends State<MyHomePage> {
       body: ListView(
         children: [
           SizedBox(height: 20),
-          Text(
-            "COMMON APPS",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.blue),
-          ),
-          Column(children: appWidgets),
-          SizedBox(height: 20),
 
-          // Text(
-          //   "OTHER APPS",
-          //   textAlign: TextAlign.center,
-          //   style: TextStyle(color: Colors.blue),
-          // ),
-          // appYoutubeMusicRevanced,
-          // appRevancedManager,
-          // appTiktokRevanced,
-          // appRedditRevanced,
-          // appTwitchRevanced,
-          // SizedBox(height: 30),
+          if (appWidgets.isNotEmpty)
+            Text(
+              "ALL APPS",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.blue),
+            ),
+          if (appWidgets.isNotEmpty) Column(children: appWidgets),
+          if (appWidgets.isNotEmpty) SizedBox(height: 20),
+
           Center(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -120,7 +147,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 KofiButton(kofiName: 'revancednet', kofiColor: KofiColor.Blue),
               ],
             ),
-          ),Center(
+          ),
+          Center(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -129,7 +157,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     onPressed: _launchURL,
                     child: Text('Visit revanced.net'),
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.lightBlue),
+                      backgroundColor:
+                          MaterialStateProperty.all(Colors.lightBlue),
                     ))
               ],
             ),
@@ -138,11 +167,11 @@ class _MyHomePageState extends State<MyHomePage> {
           // Text("SOCIALS"),
         ],
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: refresh,
-      //   tooltip: 'Increment',
-      //   child: const Icon(Icons.refresh),
-      // ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: FloatingActionButton(
+        onPressed: refreshButtonPressed,
+        tooltip: 'Refresh app list',
+        child: const Icon(Icons.refresh),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
@@ -151,6 +180,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    Future.microtask(() async {
+      await initAppList();
+    });
+
     refresh().then((value) => {});
     timer = Timer.periodic(
         const Duration(seconds: 5), (Timer t) => refresh().then((value) => {}));
@@ -167,5 +200,9 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       throw 'Could not launch $url';
     }
+  }
+
+  Future<void> refreshButtonPressed() async {
+    await initAppList();
   }
 }

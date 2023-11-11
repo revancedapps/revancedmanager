@@ -7,21 +7,31 @@ import android.content.Intent
 import android.net.Uri
 
 class MainActivity: FlutterActivity() {
-    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+    private val CHANNEL = "com.flutter.uninstall"
+
+    override fun configureFlutterEngine( flutterEngine: FlutterEngine) {
+//        GeneratedPluginRegistrant.registerWith(flutterEngine)
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
+            .setMethodCallHandler { call, result ->
+                if (call.method.equals("uninstallApp")) {
+                    val packageName: String? = call.argument("packageName")
+                    if (packageName != null) {
+                        uninstallApp(packageName.toString())
+                    }
 
-        // Create a MethodChannel object and specify the name of the channel that you want to use.
-        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.flutter.uninstall")
-
-        // Register a callback to handle messages that are received from the other side of the channel.
-        channel.setMethodCallHandler { call, result ->
-            if (call.method == "Uninstall") {
-                val packageName = call.argument<String>("package")
-
-                val intent = Intent(Intent.ACTION_UNINSTALL_PACKAGE, Uri.parse("package:$packageName"))
-                val r =  startActivityForResult(intent,1 )
-                result.success(r)
+                    result.success(null)
+                } else {
+                    result.notImplemented()
+                }
             }
-        }
     }
+
+    private fun uninstallApp(packageName: String) {
+        val intent = Intent(Intent.ACTION_DELETE)
+        intent.setData(Uri.parse("package:$packageName"))
+        startActivity(intent)
+    }
+
+
 }
