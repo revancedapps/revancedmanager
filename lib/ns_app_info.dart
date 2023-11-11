@@ -11,23 +11,22 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart' as syspaths;
 
+typedef ReloadCallback = Future<void> Function();
+
 class NsAppInfo extends StatefulWidget {
   final AppItem appItem;
 
-  final Function() onNeedToReload;
+  final ReloadCallback onNeedToReload;
 
   NsAppInfoState? state;
 
-  NsAppInfo(
-      {super.key,
-      required this.appItem,
-      required this.onNeedToReload}) {
+  NsAppInfo({super.key, required this.appItem, required this.onNeedToReload}) {
     this.appItem.Widget = this;
-
   }
 
   @override
   State<StatefulWidget> createState() {
+    print('createState ${appItem?.title}');
     state = NsAppInfoState();
     return state!;
   }
@@ -49,31 +48,20 @@ class NsAppInfo extends StatefulWidget {
         if (state!.isInstalling == true &&
             currentVersion == latestVersion &&
             currentVersion.isNotEmpty) state!.isInstalling = false;
-
-        // if (state!.isInstalling || state!.isUnInstalling) {
-        //   print("tempStatusCount+1");
-        //   state!.tempStatusCount += 1;
-        //   if (state!.tempStatusCount > 2) {
-        //     state!.isInstalling = false;
-        //     state!.isUnInstalling = false;
-        //     state!.tempStatusCount = 0;
-        //   }
-        // } else {
-        //   state!.tempStatusCount = 0;
-        // }
       });
     }
   }
+
   void updateInfo() {
     // this.appApkUrl = apkUrl;
     if (state?.mounted == true) {
       state?.setState(() {
-        state!._currentVersion = appItem.currentVersion??"";
-        state!._latestVersion = appItem.latestVersion??"";
+        state!._currentVersion = appItem.currentVersion ?? "";
+        state!._latestVersion = appItem.latestVersion ?? "";
         state!.isLoading = false;
 
         if (state!.isInstalling == true &&
-            appItem.currentVersion ==  appItem.latestVersion &&
+            appItem.currentVersion == appItem.latestVersion &&
             appItem.currentVersion!.isNotEmpty) state!.isInstalling = false;
       });
     }
@@ -100,7 +88,10 @@ class NsAppInfoState extends State<NsAppInfo> {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           ListTile(
-            leading: Image.asset("images/apps/"+widget.appItem.packageName+".png", width: 64, height: 64),
+            leading: Image.asset(
+                "images/apps/" + widget.appItem.packageName + ".png",
+                width: 64,
+                height: 64),
             title: Text(widget.appItem.title),
             subtitle: Text(widget.appItem.description,
                 style: TextStyle(
@@ -190,15 +181,10 @@ class NsAppInfoState extends State<NsAppInfo> {
                       ),
                       onPressed: () async {
                         // isUnInstalling = true;
-                        const platform = MethodChannel('com.flutter.uninstall');
                         String package = widget.appItem.packageName;
+                        await uninstallApp(package);
 
-                        var uninstallResult =
-                            await platform.invokeMethod("Uninstall", {
-                          "package": package,
-                        });
-                        print(uninstallResult);
-                        widget.onNeedToReload();
+                        await widget.onNeedToReload();
                       }),
                 ),
               if (_currentVersion?.isNotEmpty == true &&
@@ -222,7 +208,7 @@ class NsAppInfoState extends State<NsAppInfo> {
                 TextButton(
                     onPressed: () {},
                     child: Text(
-                        "Downloading ${downloadPercent.toStringAsFixed(1)}%")),
+                        "Downloading ${downloadPercent.toStringAsFixed(2)}%")),
               if (isInstalling)
                 TextButton(onPressed: () {}, child: Text("Installing...")),
               // if (isUnInstalling)
@@ -239,13 +225,33 @@ class NsAppInfoState extends State<NsAppInfo> {
     File file = File(filePath);
     return await file.exists();
   }
+  @override
+  void initState() {
+    super.initState();
+    // Here, the widget is just about to be mounted.
+    print("State is about to be mounted");
+  }
+
+
+  static Future<void> uninstallApp(String packageName) async {
+    const platform = MethodChannel('com.flutter.uninstall');
+    try {
+      await platform.invokeMethod('uninstallApp', {'packageName': packageName});
+      print("Uninstall app: '${packageName}', call completed");
+    } on PlatformException catch (e) {
+      // Handle the exception
+      print("Failed to uninstall app: '${e.message}'.");
+    }
+  }
+
   void showYesNoDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Confirmation'),
-          content: Text('The file has been downloaded previously. Do you want to install it instead of downloading a new file?'),
+          content: Text(
+              'The file has been downloaded previously. Do you want to install it instead of downloading a new file?'),
           actions: <Widget>[
             // No button
             TextButton(
@@ -275,11 +281,9 @@ class NsAppInfoState extends State<NsAppInfo> {
     return digest.toString(); // Convert the hash to a string
   }
 
-
   void DownloadAndInstallApk() async {
     var tempDir = await syspaths.getTemporaryDirectory();
-    String urlHash = calculateMD5( widget.appItem.downloadUrl!);
-
+    String urlHash = calculateMD5(widget.appItem.downloadUrl!);
 
     var apkPath =
         "${tempDir.path}/${widget.appItem.packageName}.${_latestVersion}.${urlHash}.apk";
@@ -293,7 +297,7 @@ class NsAppInfoState extends State<NsAppInfo> {
 
       needToDownload = false;
 
-     /* showYesNoDialog(xxx)..then((result) {
+      /* showYesNoDialog(xxx)..then((result) {
         if (result != null && result) {
           // User selected Yes, perform desired action
           needToDownload = false;
@@ -314,7 +318,7 @@ class NsAppInfoState extends State<NsAppInfo> {
           setState(() {
             downloadPercent = 100.0 * count / total;
           });
-          print('Downloading ${(100.0 * count / total).toStringAsFixed(1)}%');
+          print('Downloading ${(100.0 * count / total).toStringAsFixed(2)}%');
         },
       );
     }
@@ -323,14 +327,24 @@ class NsAppInfoState extends State<NsAppInfo> {
 
     print(apkPath);
     isDownloading = false;
-    isInstalling = true;
+
     // File file = File(apkPath);
     // var raf = file.openSync(mode: FileMode.write);
     // // response.data is List<int> type
     // raf.writeFromSync(response.data);
     // await raf.close();
 
-    AppInstaller.installApk(apkPath);
-    widget.onNeedToReload();
+    try {
+      isInstalling = true;
+      await AppInstaller.installApk(apkPath);
+    } catch (e) {
+      print('An unknown error occurred: $e');
+    } finally {
+      print('Finish install');
+
+      isInstalling = false;
+    }
+
+    await widget.onNeedToReload();
   }
 }
