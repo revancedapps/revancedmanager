@@ -36,7 +36,10 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late List<NsAppInfo> appWidgets = [];
 
   List<AppItem> appItems = [];
@@ -66,10 +69,11 @@ class _MyHomePageState extends State<MyHomePage> {
       if (app.currentVersion?.isNotEmpty == true) installed = true;
 
 
-      if (installed)
+      if (installed) {
         installedApps.add(app);
-      else
+      } else {
         notInstalledApps.add(app);
+      }
     }
 
 
@@ -122,6 +126,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
