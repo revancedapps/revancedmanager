@@ -1,11 +1,34 @@
 import java.io.FileInputStream
 import java.util.Properties
+import java.io.FileOutputStream
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
+// Function to load version properties
+fun loadVersionProps(): Properties {
+    val versionPropsFile = project.rootProject.file("version.properties")
+    val versionProps = Properties()
+
+    if (versionPropsFile.exists()) {
+        versionProps.load(FileInputStream(versionPropsFile))
+    } else {
+        // Initialize with default values if file doesn't exist
+        versionProps["VERSION_CODE"] = "1"
+        versionProps["VERSION_NAME_MAJOR"] = "2"
+        versionProps["VERSION_NAME_MINOR"] = "0"
+        versionProps["VERSION_NAME_PATCH"] = "0"
+        versionProps.store(FileOutputStream(versionPropsFile), null)
+    }
+
+    return versionProps
+}
+// Load version properties
+val versionProps = loadVersionProps()
+
 
 plugins {
     alias(libs.plugins.android.application)
@@ -23,8 +46,11 @@ android {
         applicationId = "com.revanced.net.revancedmanager"
         minSdk = 24
         targetSdk = 34
-        versionCode = 20
-        versionName = "2.0.1"
+
+        // Use version properties
+        versionCode = versionProps["VERSION_CODE"].toString().toInt()
+        versionName = "${versionProps["VERSION_NAME_MAJOR"]}.${versionProps["VERSION_NAME_MINOR"]}.${versionProps["VERSION_NAME_PATCH"]}"
+
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -72,6 +98,59 @@ android {
         }
     }
 }
+
+
+tasks.register("incrementVersion") {
+    group = "versioning"
+    description = "Increments version code and patch version"
+
+    doLast {
+        val versionPropsFile = project.rootProject.file("version.properties")
+        val versionProps = loadVersionProps()
+
+        // Increment version code
+        val versionCode = versionProps["VERSION_CODE"].toString().toInt() + 1
+        versionProps["VERSION_CODE"] = versionCode.toString()
+
+        // Increment patch version
+        val patch = versionProps["VERSION_NAME_PATCH"].toString().toInt() + 1
+        versionProps["VERSION_NAME_PATCH"] = patch.toString()
+
+        // Save updated properties
+        versionProps.store(FileOutputStream(versionPropsFile), null)
+
+        println("Version incremented to: ${versionProps["VERSION_NAME_MAJOR"]}.${versionProps["VERSION_NAME_MINOR"]}.${versionProps["VERSION_NAME_PATCH"]} (${versionCode})")
+    }
+}
+
+
+tasks.register("revancedRelease") {
+    description = "Builds release APK, increments version, and copies to apk directory"
+
+    // Make sure this task runs after assembleRelease
+    dependsOn("assembleRelease")
+
+    finalizedBy("incrementVersion")
+    doLast {
+        // Get the version name from android config
+        val versionName = android.defaultConfig.versionName
+
+        // Define source and destination files
+        val sourceFile = layout.buildDirectory.file("outputs/apk/release/app-release.apk")
+        val destinationDir = project.rootDir.resolve("apk")
+        val destinationFile = destinationDir.resolve("revanced.net_revanced_manager_v${versionName}.apk")
+
+        // Create destination directory if it doesn't exist
+        destinationDir.mkdirs()
+
+        // Copy and rename the file
+        sourceFile.get().asFile.copyTo(destinationFile, overwrite = true)
+
+        // Log success message
+        println("APK copied to: ${destinationFile.absolutePath}")
+    }
+}
+
 
 dependencies {
 

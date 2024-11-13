@@ -86,23 +86,24 @@ class AppViewModel(
             // Check installation status and sort
             val sortedApps = unsortedApps
                 .map { app ->
-                val installedVersion = PackageUtils.getInstalledVersion(context, app.packageName)
-                var status = calStatus(installedVersion, app)
-                app.copy(currentVersion = installedVersion, status = status)
-            }
-                .sortedWith(
-                compareBy<AppItem> { app ->
-                    // Primary sort: group by installation status
-                    when (app.status) {
-                        AppItemStatus.UpToDate,
-                        AppItemStatus.UpdateAvailable -> 0  // First group
-                        else -> 1  // Second group
-                    }
-                }.thenBy { app ->
-                    // Secondary sort: by index within each group
-                    app.index
+                    val installedVersion =
+                        PackageUtils.getInstalledVersion(context, app.packageName)
+                    var status = calStatus(installedVersion, app)
+                    app.copy(currentVersion = installedVersion, status = status)
                 }
-            )
+                .sortedWith(
+                    compareBy<AppItem> { app ->
+                        // Primary sort: group by installation status
+                        when (app.status) {
+                            AppItemStatus.UpToDate,
+                            AppItemStatus.UpdateAvailable -> 0  // First group
+                            else -> 1  // Second group
+                        }
+                    }.thenBy { app ->
+                        // Secondary sort: by index within each group
+                        app.index
+                    }
+                )
 
             // Update the StateFlow with sorted list
             _appList.value = sortedApps
@@ -119,8 +120,6 @@ class AppViewModel(
         EventBus.getDefault().unregister(this)
         super.onCleared()
     }
-
-
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -160,10 +159,10 @@ class AppViewModel(
         viewModelScope.launch {
             try {
                 // Clear download table first
-                rvDownloader.clearDownloadTable()
+//                rvDownloader.clearDownloadTable()
 
                 println("Starting app refresh sequence")
-
+                ToastUtil.showSmallToast(context, "Refresh...")
                 // Create a coroutine scope that waits for all operations
                 coroutineScope {
                     // Load apps and wait for completion
@@ -189,7 +188,7 @@ class AppViewModel(
         println("onUninstallEvent: $packageName")
         viewModelScope.launch {
             updateAppProgress(packageName, 0f)
-            updateAppState(packageName, AppItemStatus.UnInstalling )
+            updateAppState(packageName, AppItemStatus.UnInstalling)
         }
         EventBus.getDefault().post(UninstallMainEvent(packageName = packageName))
     }
@@ -208,11 +207,13 @@ class AppViewModel(
         viewModelScope.launch {
             when (event.isSuccess) {
                 true -> {
-                    updateAppState(packageName, AppItemStatus.NotInstalled )
+                    updateAppState(packageName, AppItemStatus.NotInstalled)
                 }
+
                 false -> {
                     checkAppVersions(packageName)
                 }
+
                 else -> {
                     //Ignore, it's waiting for user pending action
                 }
@@ -232,10 +233,12 @@ class AppViewModel(
                     updateAppState(packageName, AppItemStatus.UpToDate)
                     checkAppVersions(packageName)
                 }
+
                 false -> {
                     updateAppState(packageName, AppItemStatus.NotInstalled)
                     checkAppVersions(packageName)
                 }
+
                 null -> {
                     // Installation pending user action
                 }
@@ -292,7 +295,6 @@ class AppViewModel(
 //        ))
         _appList.value = updatedList
     }
-
 
 
     /**
@@ -355,14 +357,13 @@ class AppViewModel(
     }
 
 
-
     fun checkAppVersions(packageName: String) {
         println("Checking app version")
         val updatedList = _appList.value.map { app ->
             if (app.packageName == packageName) {
                 val installedVersion = PackageUtils.getInstalledVersion(context, app.packageName)
                 var status = calStatus(installedVersion, app)
-                app.copy(currentVersion = installedVersion, status =  status)
+                app.copy(currentVersion = installedVersion, status = status)
             } else {
                 app
             }

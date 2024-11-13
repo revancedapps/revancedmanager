@@ -1,3 +1,3 @@
-gradlew assembleRelease
+gradlew revancedRelease
 
 pause
