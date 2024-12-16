@@ -1,12 +1,4 @@
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.database.Cursor
-import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.revanced.net.revancedmanager.DownloadCompleteEvent
@@ -26,12 +18,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.internal.wait
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.security.MessageDigest
-import kotlin.math.min
 
 /**
  * ViewModel responsible for managing the app list and handling app-related operations
@@ -341,76 +330,108 @@ class AppViewModel(
      * Check installed versions of all apps
      */
     fun checkAppVersions() {
-        println("Checking app version: begin")
+        println("Starting version check for all apps")
 
         val updatedList = _appList.value.map { app ->
             val installedVersion = PackageUtils.getInstalledVersion(context, app.packageName)
-            val status = when {
-                installedVersion == null -> AppItemStatus.NotInstalled
-                installedVersion == app.latestVersion -> AppItemStatus.UpToDate
-                else -> AppItemStatus.UpdateAvailable
-            }
-            app.copy(currentVersion = installedVersion, status = status)
+            val newStatus = calStatus(installedVersion, app)
+            app.copy(currentVersion = installedVersion, status = newStatus)
         }
 
         _appList.value = updatedList
-        println("Checking app version: finish")
+        println("Version check completed for all apps")
     }
 
 
     fun checkAppVersions(packageName: String) {
-        println("Checking app version")
+        println("Checking version for package: $packageName")
+
         val updatedList = _appList.value.map { app ->
             if (app.packageName == packageName) {
                 val installedVersion = PackageUtils.getInstalledVersion(context, app.packageName)
-                var status = calStatus(installedVersion, app)
-                app.copy(currentVersion = installedVersion, status = status)
+                val newStatus = calStatus(installedVersion, app)
+                app.copy(currentVersion = installedVersion, status = newStatus)
             } else {
                 app
             }
         }
+
         _appList.value = updatedList
     }
 
-    // Compare versions greatness
-    //      lhsVersion > rhsVersion, >0
-    //      lhsVersion < rhsVersion, <0
-    //      lhsVersion = rhsVersion, =0
-    private fun compareVersions(lhsVersion: String, rhsVersion: String): Int{
-        // literal compare
-        if (lhsVersion == rhsVersion){
-            return 0;
+    /**
+     * Compares installed version against a target version
+     * @param installedVersion Currently installed version (e.g. "2.0.7")
+     * @param comparedVersion Version to compare against (e.g. "2.0.6")
+     * @return Positive if installedVersion > comparedVersion
+     *         Negative if installedVersion < comparedVersion
+     *         Zero if versions are equal or comparison fails
+     */
+    private fun compareVersions(installedVersion: String, comparedVersion: String): Int {
+        // Handle empty cases safely
+        if (installedVersion.isEmpty() || comparedVersion.isEmpty()) {
+            return 0
         }
 
-        // app could use different version schemes among updates
-        val lhsParts = lhsVersion.split(".").toTypedArray()
-        val rhsParts = rhsVersion.split(".").toTypedArray()
-        val comparedPartsNum = min(lhsParts.size, rhsParts.size)
-
-        // search for the first differential digits
-        var index = 0
-        while(index < comparedPartsNum){
-            if(lhsParts[index] != rhsParts[index]){
-                val lhs = lhsParts[index].toInt()
-                val rhs = rhsParts[index].toInt()
-                return lhs-rhs
+        try {
+            // Split versions into components and clean non-numeric characters
+            val installedParts = installedVersion.split(".").map { part ->
+                // Extract only numeric portion from each part (e.g. "2beta" -> "2")
+                part.takeWhile { it.isDigit() }.ifEmpty { "0" }
             }
-            index++
-        }
+            val comparedParts = comparedVersion.split(".").map { part ->
+                part.takeWhile { it.isDigit() }.ifEmpty { "0" }
+            }
 
-        // has to be the same
-        return 0
+            // Get the length of the shorter version
+            val length = minOf(installedParts.size, comparedParts.size)
+
+            // Compare each component
+            for (i in 0 until length) {
+                // Convert to Long to handle larger numbers, defaulting to 0 if conversion fails
+                val installedNum = installedParts[i].toLongOrNull() ?: 0L
+                val comparedNum = comparedParts[i].toLongOrNull() ?: 0L
+
+                when {
+                    installedNum > comparedNum -> return 1
+                    installedNum < comparedNum -> return -1
+                }
+            }
+
+            // If all common components are equal, longer version is considered newer
+            return installedParts.size.compareTo(comparedParts.size)
+
+        } catch (e: Exception) {
+            // Log error and return 0 to indicate versions are considered equal
+            println("Version comparison failed: ${e.message}")
+            println("installedVersion: $installedVersion, comparedVersion: $comparedVersion")
+            return 0
+        }
     }
 
+    /**
+     * Determines the installation status of an app based on version comparison
+     * @param installedVersion Currently installed version (can be null if not installed)
+     * @param app The app item containing latest version information
+     * @return AppItemStatus representing the current status of the app
+     */
     private fun calStatus(installedVersion: String?, app: AppItem): AppItemStatus {
-        var status = AppItemStatus.UnknownStatus
-        if (installedVersion == null)
-            status = AppItemStatus.NotInstalled
-        else if (compareVersions(installedVersion, app.latestVersion)>=0)
-            status = AppItemStatus.UpToDate
-        else if (compareVersions(installedVersion, app.latestVersion)<0)
-            status = AppItemStatus.UpdateAvailable
-        println("${app.title}, installedVersion: $installedVersion, latestVersion: $installedVersion, status: $status")
-        return status
+        return when {
+            // App is not installed
+            installedVersion == null -> AppItemStatus.NotInstalled
+
+            // Compare versions to determine status
+            compareVersions(installedVersion, app.latestVersion) >= 0 -> {
+                // Installed version is newer or equal to latest
+                AppItemStatus.UpToDate
+            }
+            else -> {
+                // Installed version is older than latest
+                AppItemStatus.UpdateAvailable
+            }
+        }.also { status ->
+            // Log the status calculation for debugging
+            println("App: ${app.title}, Installed: $installedVersion, Latest: ${app.latestVersion}, Status: $status")
+        }
     }
 }

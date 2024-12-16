@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Refresh
@@ -116,7 +117,7 @@ fun RevancedManagerApp(context: Context, viewModel: AppViewModel = AppViewModel(
                 ) {
                     // Ko-fi support button
                     Button(
-                        onClick = { launchUrl("https://ko-fi.com/revancednet") },
+                        onClick = { launchUrl("https://ko-fi.com/rvmanager") },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF4285F4),
                             contentColor = Color.White  // This sets the default color for all content inside button
@@ -157,6 +158,29 @@ fun RevancedManagerApp(context: Context, viewModel: AppViewModel = AppViewModel(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             "Visit revanced.net",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White  // Explicitly set text color to white
+                        )
+                    }
+                    // Github button
+                    Button(
+                        onClick = { launchUrl("https://github.com/revancedapps/revancedmanager") },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF3295E3),
+                            contentColor = Color.White  // This sets the default color for all content inside button
+                        ),
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Code,
+                            contentDescription = "Github",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White  // Explicitly set icon color to white
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Source code",
                             style = MaterialTheme.typography.labelLarge,
                             color = Color.White  // Explicitly set text color to white
                         )

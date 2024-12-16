@@ -67,7 +67,8 @@ data class JsonAppPackage(
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class JsonAppResponse(
-    val packages: List<JsonAppPackage>
+    val packages: List<JsonAppPackage>,
+    val sponsor: String? = null
 )
 
 /**
@@ -132,7 +133,11 @@ object AppItemList {
         try {
             // Fetch and parse JSON from API
             val jsonString = URL(apiUrl).readText()
-            val response = Json.decodeFromString<JsonAppResponse>(jsonString)
+            val json = Json {
+                ignoreUnknownKeys = true
+                coerceInputValues = true
+            }
+            val response = json.decodeFromString<JsonAppResponse>(jsonString)
 
             // Convert to AppItems
             val appList = response.packages.map { pkg ->

@@ -33,6 +33,7 @@ val versionProps = loadVersionProps()
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
 
     kotlin("plugin.serialization")
 
@@ -40,7 +41,7 @@ plugins {
 
 android {
     namespace = "com.revanced.net.revancedmanager"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.revanced.net.revancedmanager"
