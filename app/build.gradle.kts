@@ -152,6 +152,72 @@ tasks.register("revancedRelease") {
     }
 }
 
+tasks.register("generateKeystore") {
+    group = "security"
+    description = "Generates a new keystore file with predefined credentials"
+
+    doLast {
+        // Load keystore properties
+        val keystorePropertiesFile = rootProject.file("keystore.properties")
+        val keystoreProperties = Properties().apply {
+            load(FileInputStream(keystorePropertiesFile))
+        }
+
+        // Extract keystore details from properties
+        val storePassword = keystoreProperties["storePassword"] as String
+        val keyPassword = keystoreProperties["keyPassword"] as String
+        val keyAlias = keystoreProperties["keyAlias"] as String
+        val storeFile = keystoreProperties["storeFile"] as String
+
+        // Create keystore file in app folder
+        val appFolder = project.projectDir
+        val keystoreFile = File(appFolder, storeFile)
+
+        // Prepare the keytool command
+        val keyToolCommand = arrayOf(
+            "keytool",
+            "-genkey",
+            "-v",
+            "-keystore", keystoreFile.absolutePath,
+            "-alias", keyAlias,
+            "-keyalg", "RSA",
+            "-keysize", "2048",
+            "-validity", "10000",
+            "-storepass", storePassword,
+            "-keypass", keyPassword,
+            "-dname", "CN=ReVanced,OU=ReVanced,O=ReVanced,L=Unknown,ST=Unknown,C=US"
+        )
+
+        try {
+            // Execute keytool command
+            val process = ProcessBuilder(*keyToolCommand)
+                .redirectErrorStream(true)
+                .start()
+
+            // Print the output
+            process.inputStream.bufferedReader().useLines { lines ->
+                lines.forEach { println(it) }
+            }
+
+            // Wait for the process to complete
+            val exitCode = process.waitFor()
+
+            if (exitCode == 0) {
+                println("""
+                    ✅ Keystore generated successfully!
+                    📁 Location: ${project.rootDir}/${storeFile}
+                    🔑 Key Alias: $keyAlias
+                    ⚡ Remember to keep your keystore file safe and secure!
+                """.trimIndent())
+            } else {
+                println("❌ Failed to generate keystore. Exit code: $exitCode")
+            }
+        } catch (e: Exception) {
+            println("❌ Error generating keystore: ${e.message}")
+            throw e
+        }
+    }
+}
 
 dependencies {
 

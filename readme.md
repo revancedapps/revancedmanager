@@ -28,8 +28,8 @@ A lightweight Android application that helps users manage, update, download, and
 
 - Android Studio (latest version recommended)
 - JDK 11 or higher
-- Android SDK API 34
-- Kotlin 1.9.0 or higher
+- Android SDK API 35
+- Kotlin 2.0.0 or higher
 
 ## Setup Instructions
 
@@ -70,26 +70,64 @@ cd revanced-manager
 
 ### Release Build
 
-1. Create a keystore file if you don't have one:
+The release build process requires a keystore file for signing the APK. For security reasons, this keystore is not included in the repository.
+
+#### 1. Generate Keystore (First time only)
+
+You have two options to create a keystore:
+
+a) Using Gradle task (Recommended):
+```bash
+# This will generate a keystore with predefined secure settings
+./gradlew generateKeystore
+```
+
+b) Manual creation using keytool:
 ```bash
 keytool -genkey -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias release
 ```
 
-2. Create/update `keystore.properties` in project root:
-```properties
-storePassword=YOUR_STORE_PASSWORD
-keyPassword=YOUR_KEY_PASSWORD
-keyAlias=release
-storeFile=../release-key.jks
-```
 
-3. Build release APK:
+⚠️ Important Security Notes:
+- Keep your keystore file (`.jks`) and `keystore.properties` secure
+- Never commit these files to version control
+- Back up these files safely - losing them means you can't update your app on Play Store
+
+#### 2. Build Release APK
+
+You have two options to build the release APK:
+
+a) Simple build:
 ```bash
-# Build release APK
 ./gradlew assembleRelease
-
-# The APK will be in app/build/outputs/apk/release/
+# Output: app/build/outputs/apk/release/app-release.apk
 ```
+
+b) Build with version management (Recommended):
+```bash
+./gradlew revancedRelease
+# Output: apk/revanced_manager_v[VERSION].apk
+```
+
+The `revancedRelease` task offers additional benefits:
+- Automatically increments version number
+- Names output file with version number
+- Creates a dedicated 'apk' directory for releases
+- Makes version tracking easier
+- Prevents confusion between different builds
+
+Example output file: `revanced_manager_v2.0.1.apk`
+
+#### 4. Verify Build
+
+After building, verify your APK:
+1. Check the signature:
+```bash
+jarsigner -verify -verbose -certs app/build/outputs/apk/release/app-release.apk
+```
+2. Test installation on a device
+3. Verify app functionality
+4. Check the version number in app settings
 
 ## Project Structure
 
@@ -129,4 +167,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - This app requires Android 7.0 (API 24) or higher
 - Some features may require additional permissions
-- Built targeting Android 14 (API 34)
+- Built targeting Android 15 (API 35)
