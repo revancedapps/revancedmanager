@@ -31,6 +31,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.security.MessageDigest
+import kotlin.math.min
 
 /**
  * ViewModel responsible for managing the app list and handling app-related operations
@@ -371,13 +372,43 @@ class AppViewModel(
         _appList.value = updatedList
     }
 
+    // Compare versions greatness
+    //      lhsVersion > rhsVersion, >0
+    //      lhsVersion < rhsVersion, <0
+    //      lhsVersion = rhsVersion, =0
+    private fun compareVersions(lhsVersion: String, rhsVersion: String): Int{
+        // literal compare
+        if (lhsVersion == rhsVersion){
+            return 0;
+        }
+
+        // app could use different version schemes among updates
+        val lhsParts = lhsVersion.split(".").toTypedArray()
+        val rhsParts = rhsVersion.split(".").toTypedArray()
+        val comparedPartsNum = min(lhsParts.size, rhsParts.size)
+
+        // search for the first differential digits
+        var index = 0
+        while(index < comparedPartsNum){
+            if(lhsParts[index] != rhsParts[index]){
+                val lhs = lhsParts[index].toInt()
+                val rhs = rhsParts[index].toInt()
+                return lhs-rhs
+            }
+            index++
+        }
+
+        // has to be the same
+        return 0
+    }
+
     private fun calStatus(installedVersion: String?, app: AppItem): AppItemStatus {
         var status = AppItemStatus.UnknownStatus
         if (installedVersion == null)
             status = AppItemStatus.NotInstalled
-        else if (installedVersion == app.latestVersion)
+        else if (compareVersions(installedVersion, app.latestVersion)>=0)
             status = AppItemStatus.UpToDate
-        else if (installedVersion != app.latestVersion)
+        else if (compareVersions(installedVersion, app.latestVersion)<0)
             status = AppItemStatus.UpdateAvailable
         println("${app.title}, installedVersion: $installedVersion, latestVersion: $installedVersion, status: $status")
         return status
