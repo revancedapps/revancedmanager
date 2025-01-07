@@ -168,3 +168,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - This app requires Android 7.0 (API 24) or higher
 - Some features may require additional permissions
 - Built targeting Android 15 (API 35)
+
+
+**Disclaimer:**  
+This project, including all associated repositories, code, and materials, is an independent fork of the open-source ReVanced project. It is not affiliated with, endorsed by, or connected to the official ReVanced project or its trademark owner. The name "ReVanced" is used solely to describe the nature of the software and does not imply any official association.  
+
+All trademarks, service marks, and registered trademarks mentioned in this project are the property of their respective owners. This project is developed and maintained by an independent community and is not responsible for any actions taken by the official ReVanced project or its representatives.  
+
+For more information about the official ReVanced project, please visit their website: [https://revanced.app](https://revanced.app).
