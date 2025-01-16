@@ -2,7 +2,7 @@ import android.content.Context
 import android.content.SharedPreferences
 
 object SharedPreferencesUtil {
-    private const val PREF_NAME = "ReVancedManagerPreferences"
+    private const val PREF_NAME = "RVManagerPreferences"
     private lateinit var sharedPreferences: SharedPreferences
 
     fun init(context: Context) {

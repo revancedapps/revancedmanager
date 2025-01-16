@@ -29,13 +29,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.revanced.net.revancedmanager.DownloadEvent
+import com.rv.net.rvmanager.DownloadEvent
 import org.greenrobot.eventbus.EventBus
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
-import com.revanced.net.revancedmanager.OpenAppEvent
-import com.revanced.net.revancedmanager.UninstallEvent
+import com.rv.net.rvmanager.OpenAppEvent
+import com.rv.net.rvmanager.UninstallEvent
 import java.text.DecimalFormat
 
 @Composable

@@ -40,11 +40,11 @@ plugins {
 }
 
 android {
-    namespace = "com.revanced.net.revancedmanager"
+    namespace = "com.rv.net.rvmanager"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.revanced.net.revancedmanager"
+        applicationId = "com.rv.net.rvmanager"
         minSdk = 24
         targetSdk = 34
 
@@ -125,7 +125,7 @@ tasks.register("incrementVersion") {
 }
 
 
-tasks.register("revancedRelease") {
+tasks.register("rvRelease") {
     description = "Builds release APK, increments version, and copies to apk directory"
 
     // Make sure this task runs after assembleRelease
@@ -139,7 +139,7 @@ tasks.register("revancedRelease") {
         // Define source and destination files
         val sourceFile = layout.buildDirectory.file("outputs/apk/release/app-release.apk")
         val destinationDir = project.rootDir.resolve("apk")
-        val destinationFile = destinationDir.resolve("revanced.net_revanced_manager_v${versionName}.apk")
+        val destinationFile = destinationDir.resolve("rv.net_rv_manager_v${versionName}.apk")
 
         // Create destination directory if it doesn't exist
         destinationDir.mkdirs()
@@ -185,7 +185,7 @@ tasks.register("generateKeystore") {
             "-validity", "10000",
             "-storepass", storePassword,
             "-keypass", keyPassword,
-            "-dname", "CN=ReVanced,OU=ReVanced,O=ReVanced,L=Unknown,ST=Unknown,C=US"
+            "-dname", "CN=RV,OU=RV,O=RV,L=Unknown,ST=Unknown,C=US"
         )
 
         try {

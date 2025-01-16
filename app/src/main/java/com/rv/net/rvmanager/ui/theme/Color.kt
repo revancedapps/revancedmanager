@@ -1,4 +1,4 @@
-package com.revanced.net.revancedmanager.ui.theme
+package com.rv.net.rvmanager.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

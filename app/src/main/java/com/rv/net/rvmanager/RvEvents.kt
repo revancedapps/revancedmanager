@@ -1,4 +1,4 @@
-package com.revanced.net.revancedmanager
+package com.rv.net.rvmanager
 
 data class DownloadEvent(
     val packageName: String,

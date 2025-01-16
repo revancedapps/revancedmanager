@@ -6,7 +6,7 @@ import android.content.pm.PackageInstaller
 import android.widget.Toast
 import android.app.PendingIntent
 import android.os.Build
-import com.revanced.net.revancedmanager.UninstallCompletedEvent
+import com.rv.net.rvmanager.UninstallCompletedEvent
 import org.greenrobot.eventbus.EventBus
 
 class AppUninstaller(private val context: Context) {

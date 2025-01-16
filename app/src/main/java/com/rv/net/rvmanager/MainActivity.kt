@@ -1,9 +1,9 @@
-package com.revanced.net.revancedmanager
+package com.rv.net.rvmanager
 
 import AppInstaller
 import AppUninstaller
-import RevancedManagerApp
-import RevancedManagerTheme
+import RVManagerApp
+import RVManagerTheme
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -40,12 +40,12 @@ class MainActivity : ComponentActivity() {
 //        }
 
         setContent {
-            RevancedManagerTheme {
+            RVManagerTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    RevancedManagerApp(context = baseContext)
+                    RVManagerApp(context = baseContext)
                 }
             }
         }

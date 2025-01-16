@@ -5,7 +5,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageInstaller
 import android.os.Build
 import android.app.PendingIntent
-import com.revanced.net.revancedmanager.InstallCompletedEvent
+import com.rv.net.rvmanager.InstallCompletedEvent
 import org.greenrobot.eventbus.EventBus
 import java.io.File
 import java.io.FileInputStream

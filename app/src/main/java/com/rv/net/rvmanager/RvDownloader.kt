@@ -6,9 +6,9 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import com.revanced.net.revancedmanager.DownloadCompleteEvent
-import com.revanced.net.revancedmanager.DownloadEvent
-import com.revanced.net.revancedmanager.DownloadProgressEvent
+import com.rv.net.rvmanager.DownloadCompleteEvent
+import com.rv.net.rvmanager.DownloadEvent
+import com.rv.net.rvmanager.DownloadProgressEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -20,7 +20,7 @@ import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
 /**
- * RvDownloader: A class responsible for managing downloads in the ReVanced Manager app.
+ * RvDownloader: A class responsible for managing downloads in the RV Manager app.
  * It handles download initialization, monitoring, and status updates.
  *
  * @property context The application context used for system service access.

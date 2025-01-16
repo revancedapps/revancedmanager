@@ -1,4 +1,4 @@
-package com.revanced.net.revancedmanager
+package com.rv.net.rvmanager
 
 import android.content.Context
 import android.content.Intent

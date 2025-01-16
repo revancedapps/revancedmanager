@@ -75,15 +75,15 @@ data class JsonAppResponse(
  * Handles fetching and managing app list data
  */
 object AppItemList {
-    private const val BASE_URL = "https://revanced.net/"
+    private const val BASE_URL = "https://rv.net/"
     private const val CACHED_APP_LIST_KEY = "cached_app_list"
 
     // API endpoints for different architectures
-    private const val ARM64_V8A_URL = "${BASE_URL}revanced-apps-arm64-v8a.json"
-    private const val ARMEABI_V7A_URL = "${BASE_URL}revanced-apps-armeabi-v7a.json"
-    private const val X86_URL = "${BASE_URL}revanced-apps-x86.json"
-    private const val X86_64_URL = "${BASE_URL}revanced-apps-x86_64.json"
-    private const val FALLBACK_URL = "${BASE_URL}revanced-apps.json"
+    private const val ARM64_V8A_URL = "${BASE_URL}rv-apps-arm64-v8a.json"
+    private const val ARMEABI_V7A_URL = "${BASE_URL}rv-apps-armeabi-v7a.json"
+    private const val X86_URL = "${BASE_URL}rv-apps-x86.json"
+    private const val X86_64_URL = "${BASE_URL}rv-apps-x86_64.json"
+    private const val FALLBACK_URL = "${BASE_URL}rv-apps.json"
 
     /**
      * Get list of supported CPU architectures

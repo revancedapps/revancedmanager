@@ -1,4 +1,14 @@
-# ReVanced Manager 2.0
+
+**Disclaimer:**  
+This project, including all associated repositories, code, and materials, is an independent fork of the open-source RV project. It is not affiliated with, endorsed by, or connected to the official ReVanced project or its trademark owner. 
+
+All trademarks, service marks, and registered trademarks mentioned in this project are the property of their respective owners. This project is developed and maintained by an independent community and is not responsible for any actions taken by the official RV project or its representatives.  
+
+For more information about the official ReVanced project, please visit their website: [https://revanced.app](https://revanced.app).
+
+
+
+# RV Manager 2.0
 
 A lightweight Android application that helps users manage, update, download, and uninstall applications efficiently. Built with modern Android development practices using Kotlin and Jetpack Compose.
 
@@ -35,7 +45,7 @@ A lightweight Android application that helps users manage, update, download, and
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/nsknet/RevancedManager
+git clone https://github.com/nsknet/RVManager
 ```
 
 2. Open Android Studio and select "Open an existing project"
@@ -60,7 +70,7 @@ sdk.dir=YOUR_ANDROID_SDK_PATH
 2. Using Command Line:
 ```bash
 # Navigate to project root
-cd revanced-manager
+cd rv-manager
 
 # Build debug APK
 ./gradlew assembleDebug
@@ -105,18 +115,18 @@ a) Simple build:
 
 b) Build with version management (Recommended):
 ```bash
-./gradlew revancedRelease
-# Output: apk/revanced_manager_v[VERSION].apk
+./gradlew rvRelease
+# Output: apk/rv_manager_v[VERSION].apk
 ```
 
-The `revancedRelease` task offers additional benefits:
+The `rvRelease` task offers additional benefits:
 - Automatically increments version number
 - Names output file with version number
 - Creates a dedicated 'apk' directory for releases
 - Makes version tracking easier
 - Prevents confusion between different builds
 
-Example output file: `revanced_manager_v2.0.1.apk`
+Example output file: `rv_manager_v2.0.1.apk`
 
 #### 4. Verify Build
 
@@ -131,7 +141,7 @@ jarsigner -verify -verbose -certs app/build/outputs/apk/release/app-release.apk
 
 ## Project Structure
 
-- `\app\src\main\java\com\revanced\net\revancedmanager`
+- `\app\src\main\java\com\rv\net\rvmanager`
   - `MainActivity.kt`: Main entry point
   - `AppViewModel.kt`: Manages app state and business logic
   - `AppItem.kt`: Data models
@@ -155,13 +165,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- [ReVanced Project](https://revanced.net/)
+- [RV Project](https://rv.net/)
 - Icons and graphics from Material Design
 
 ## Contact
 
-- Website: [revanced.net](https://revanced.net)
-- Support: [Ko-fi](https://ko-fi.com/revancednet)
+- Website: [rv.net](https://rv.net)
+- Support: [Ko-fi](https://ko-fi.com/rvnet)
 
 ## Notes
 
@@ -169,10 +179,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Some features may require additional permissions
 - Built targeting Android 15 (API 35)
 
-
-**Disclaimer:**  
-This project, including all associated repositories, code, and materials, is an independent fork of the open-source ReVanced project. It is not affiliated with, endorsed by, or connected to the official ReVanced project or its trademark owner. The name "ReVanced" is used solely to describe the nature of the software and does not imply any official association.  
-
-All trademarks, service marks, and registered trademarks mentioned in this project are the property of their respective owners. This project is developed and maintained by an independent community and is not responsible for any actions taken by the official ReVanced project or its representatives.  
-
-For more information about the official ReVanced project, please visit their website: [https://revanced.app](https://revanced.app).

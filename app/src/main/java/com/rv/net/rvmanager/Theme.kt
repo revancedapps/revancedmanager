@@ -57,7 +57,7 @@ val AppTypography = Typography(
 )
 
 @Composable
-fun RevancedManagerTheme(
+fun RVManagerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {

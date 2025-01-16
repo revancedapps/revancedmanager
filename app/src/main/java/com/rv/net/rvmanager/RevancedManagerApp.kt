@@ -35,14 +35,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.revanced.net.revancedmanager.RefreshEvent
+import com.rv.net.rvmanager.RefreshEvent
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 
 
 
 /**
- * Main composable for the ReVanced Manager app
+ * Main composable for the RV Manager app
  * Displays a list of apps and support buttons
  *
  * @param context Android context for system operations
@@ -50,7 +50,7 @@ import org.greenrobot.eventbus.EventBus
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RevancedManagerApp(context: Context, viewModel: AppViewModel = AppViewModel(context)) {
+fun RVManagerApp(context: Context, viewModel: AppViewModel = AppViewModel(context)) {
     val appList by viewModel.appList.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
@@ -91,7 +91,7 @@ fun RevancedManagerApp(context: Context, viewModel: AppViewModel = AppViewModel(
         ) {
             item {
                 Text(
-                    "ReVanced Manager by revanced.net",
+                    "RV Manager by rv.net",
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF3295E3),
                     modifier = Modifier
@@ -141,7 +141,7 @@ fun RevancedManagerApp(context: Context, viewModel: AppViewModel = AppViewModel(
 
                     // Website button
                     Button(
-                        onClick = { launchUrl("https://revanced.net") },
+                        onClick = { launchUrl("https://rv.net") },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF3295E3),
                             contentColor = Color.White  // This sets the default color for all content inside button
@@ -157,14 +157,14 @@ fun RevancedManagerApp(context: Context, viewModel: AppViewModel = AppViewModel(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Visit revanced.net",
+                            "Visit rv.net",
                             style = MaterialTheme.typography.labelLarge,
                             color = Color.White  // Explicitly set text color to white
                         )
                     }
                     // Github button
                     Button(
-                        onClick = { launchUrl("https://github.com/revancedapps/revancedmanager") },
+                        onClick = { launchUrl("https://github.com/rvapps/rvmanager") },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF3295E3),
                             contentColor = Color.White  // This sets the default color for all content inside button
